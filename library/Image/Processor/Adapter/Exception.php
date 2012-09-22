@@ -11,17 +11,17 @@
  *
  * @category   Image
  * @package    Processor
- * @subpackage Adapter_Abstract
+ * @subpackage Adapter_Exception
  * @copyright  Copyright (c) 2012 PHP Image Manipulation & Processing Library
  * @license    http://www.opensource.org/licenses/bsd-license.php
- * @since      Thursday, 20 September 2012
+ * @since      Saturday, 22 September 2012
  */
 /**
- * Image processor adapter abstract class.
+ * Image processor adapter exception class.
  *
  * @category   Image
  * @package    Processor
- * @subpackage Adapter_Abstract
+ * @subpackage Adapter_Exception
  * @copyright  Copyright (c) 2012 PHP Image Manipulation & Processing Library
  * @license    http://www.opensource.org/licenses/bsd-license.php
  */

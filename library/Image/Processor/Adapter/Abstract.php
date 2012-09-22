@@ -27,8 +27,15 @@
  */
 abstract class Image_Processor_Adapter_Abstract implements Image_Processor_Adapter_Interface
 {
+    /**
+     * An array of required extensions to make this adapter work.
+     *
+     * @var unknown_type
+     */
+    protected $_requiredExtensions = array();
+
     public $fileName = null;
-    public $imageBackgroundColor = 0;
+    protected $_imageBackgroundColor = 0;
 
     /**#@+
      * Position constant
@@ -49,26 +56,31 @@ abstract class Image_Processor_Adapter_Abstract implements Image_Processor_Adapt
      *
      * @property string
      */
-    protected $_fileType = null;
-    protected $_fileName = null;
-    protected $_fileMimeType = null;
-    protected $_fileSrcName = null;
-    protected $_fileSrcPath = null;
-    protected $_imageHandler = null;
-    protected $_imageSrcWidth = null;
-    protected $_imageSrcHeight = null;
-    protected $_requiredExtensions = null;
-    protected $_watermarkPosition = null;
-    protected $_watermarkWidth = null;
-    protected $_watermarkHeigth = null;
-    protected $_watermarkImageOpacity = null;
-    protected $_quality = null;
-
-    protected $_keepAspectRatio = true;
+    protected $_fileType;
+    protected $_fileName;
+    protected $_fileMimeType;
+    protected $_fileSrcName;
+    protected $_fileSrcPath;
+    protected $_imageHandler;
+    protected $_imageSrcWidth;
+    protected $_imageSrcHeight;
+    protected $_watermarkPosition;
+    protected $_watermarkWidth;
+    protected $_watermarkHeigth;
+    protected $_watermarkImageOpacity;
+    protected $_quality;
     protected $_keepFrame;
     protected $_keepTransparency;
     protected $_backgroundColor;
     protected $_constrainOnly;
+    /**#@-*/
+
+    /**#@+
+     * Protected property
+     *
+     * @property boolean
+     */
+    protected $_keepAspectRatio = true;
     /**#@-*/
 
     abstract public function open($fileName);
@@ -85,8 +97,6 @@ abstract class Image_Processor_Adapter_Abstract implements Image_Processor_Adapt
 
     abstract public function watermark($watermarkImage, $positionX=0, $positionY=0,
         $watermarkImageOpacity=30, $repeat=false);
-
-    abstract public function checkDependencies();
 
     public function getMimeType()
     {
@@ -127,6 +137,12 @@ abstract class Image_Processor_Adapter_Abstract implements Image_Processor_Adapt
      * @param  string
      * @return Image_Processor_Adapter_Abstract
      */
+    public function setWatermarkPosition($position)
+    {
+        $this->_watermarkPosition = $position;
+        return $this;
+    }
+
     public function setWatermarkImageOpacity($imageOpacity)
     {
         $this->_watermarkImageOpacity = $imageOpacity;
@@ -145,9 +161,9 @@ abstract class Image_Processor_Adapter_Abstract implements Image_Processor_Adapt
         return $this;
     }
 
-    public function setWatermarkPosition($position)
+    public function setImageBackgroundColor($color)
     {
-        $this->_watermarkPosition = $position;
+        $this->_imageBackgroundColor = $color;
         return $this;
     }
     /**#@-*/
@@ -175,6 +191,11 @@ abstract class Image_Processor_Adapter_Abstract implements Image_Processor_Adapt
     public function getWatermarkHeigth()
     {
         return $this->_watermarkHeigth;
+    }
+
+    public function getImageBackgroundColor()
+    {
+        return $this->_imageBackgroundColor;
     }
     /**#@-*/
 
@@ -270,6 +291,25 @@ abstract class Image_Processor_Adapter_Abstract implements Image_Processor_Adapt
         return $this->_backgroundColor;
     }
 
+    /**
+     * This method checks pependencies based on the {@see $this->_requiredExtensions} array.
+     *
+     * @return Image_Processor_Adapter_Abstract
+     */
+    public function checkDependencies()
+    {
+        foreach ($this->_requiredExtensions as $value) {
+            if (!extension_loaded($value)) {
+                throw new Image_Processor_Adapter_Exception("Required PHP extension '{$value}' was not loaded");
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Sets the file attributes into {@see $this->_fileSrcPath} and  {@see $this->_fileSrcName}.
+     */
     protected function _getFileAttributes()
     {
         $pathinfo = pathinfo($this->_fileName);

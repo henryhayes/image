@@ -27,7 +27,18 @@
  */
 class Image_Processor_Adapter_Gd2 extends Image_Processor_Adapter_Abstract
 {
-    protected $_requiredExtensions = Array("gd");
+    /**
+     * An array of required extensions to make this adapter work.
+     *
+     * @var unknown_type
+     */
+    protected $_requiredExtensions = array('gd');
+
+    /**
+     * Array of image callback functions depending on image type.
+     *
+     * @var array
+     */
     private static $_callbacks = array(
         IMAGETYPE_GIF  => array('output' => 'imagegif',  'create' => 'imagecreatefromgif'),
         IMAGETYPE_JPEG => array('output' => 'imagejpeg', 'create' => 'imagecreatefromjpeg'),
@@ -71,10 +82,15 @@ class Image_Processor_Adapter_Gd2 extends Image_Processor_Adapter_Abstract
 
         if (!is_writable($destinationDir)) {
             try {
+                /**
+                 * @todo Find a new way of creating a non-existent path to save to.
+                 */
                 $io = new Varien_Io_File();
                 $io->mkdir($destination);
             } catch (Exception $e) {
-                throw new Exception("Unable to write file into directory '{$destinationDir}'. Access forbidden.");
+                throw new Image_Processor_Adapter_Exception(
+                    "Unable to write file into directory '{$destinationDir}'. Access forbidden."
+                );
             }
         }
 
@@ -137,18 +153,18 @@ class Image_Processor_Adapter_Gd2 extends Image_Processor_Adapter_Abstract
      * @param string $callbackType
      * @param int $fileType
      * @return string
-     * @throws Exception
+     * @throws Image_Processor_Adapter_Exception
      */
-    private function _getCallback($callbackType, $fileType = null, $unsupportedText = 'Unsupported image format.')
+    private function _getCallback($callbackType, $fileType = null, $unsupportedText = 'Unsupported image format')
     {
         if (null === $fileType) {
             $fileType = $this->_fileType;
         }
         if (empty(self::$_callbacks[$fileType])) {
-            throw new Exception($unsupportedText);
+            throw new Image_Processor_Adapter_Exception($unsupportedText);
         }
         if (empty(self::$_callbacks[$fileType][$callbackType])) {
-            throw new Exception('Callback not found.');
+            throw new Image_Processor_Adapter_Exception('Callback not found');
         }
         return self::$_callbacks[$fileType][$callbackType];
     }
@@ -164,20 +180,29 @@ class Image_Processor_Adapter_Gd2 extends Image_Processor_Adapter_Abstract
                 if ($isAlpha) {
 
                     if (!imagealphablending($imageResourceTo, false)) {
-                        throw new Exception('Failed to set alpha blending for PNG image.');
+                        throw new Image_Processor_Adapter_Exception(
+                            'Failed to set alpha blending for PNG image.'
+                        );
                     }
                     $transparentAlphaColor = imagecolorallocatealpha($imageResourceTo, 0, 0, 0, 127);
                     if (false === $transparentAlphaColor) {
-                        throw new Exception('Failed to allocate alpha transparency for PNG image.');
+                        throw new Image_Processor_Adapter_Exception(
+                            'Failed to allocate alpha transparency for PNG image.'
+                        );
                     }
                     if (!imagefill($imageResourceTo, 0, 0, $transparentAlphaColor)) {
-                        throw new Exception('Failed to fill PNG image with alpha transparency.');
+                        throw new Image_Processor_Adapter_Exception(
+                            'Failed to fill PNG image with alpha transparency.'
+                        );
                     }
                     if (!imagesavealpha($imageResourceTo, true)) {
-                        throw new Exception('Failed to save alpha transparency into PNG image.');
+                        throw new Image_Processor_Adapter_Exception(
+                            'Failed to save alpha transparency into PNG image.'
+                        );
                     }
 
                     return $transparentAlphaColor;
+
                 } elseif (false !== $transparentIndex) {
                     // fill image with indexed non-alpha transparency
                     $transparentColor = false;
@@ -186,23 +211,24 @@ class Image_Processor_Adapter_Gd2 extends Image_Processor_Adapter_Abstract
                         $transparentColor = imagecolorallocate($imageResourceTo, $r, $g, $b);
                     }
                     if (false === $transparentColor) {
-                        throw new Exception('Failed to allocate transparent color for image.');
+                        throw new Image_Processor_Adapter_Exception('Failed to allocate transparent color for image.');
                     }
                     if (!imagefill($imageResourceTo, 0, 0, $transparentColor)) {
-                        throw new Exception('Failed to fill image with transparency.');
+                        throw new Image_Processor_Adapter_Exception('Failed to fill image with transparency.');
                     }
                     imagecolortransparent($imageResourceTo, $transparentColor);
+
                     return $transparentColor;
                 }
             }
-            catch (Exception $e) {
+            catch (Image_Processor_Adapter_Exception $e) {
                 // fallback to default background color
             }
         }
         list($r, $g, $b) = $this->_backgroundColor;
         $color = imagecolorallocate($imageResourceTo, $r, $g, $b);
         if (!imagefill($imageResourceTo, 0, 0, $color)) {
-            throw new Exception("Failed to fill image background with color {$r} {$g} {$b}.");
+            throw new Image_Processor_Adapter_Exception("Failed to fill image background with color {$r} {$g} {$b}.");
         }
 
         return $color;
@@ -252,7 +278,7 @@ class Image_Processor_Adapter_Gd2 extends Image_Processor_Adapter_Abstract
     public function resize($frameWidth = null, $frameHeight = null)
     {
         if (empty($frameWidth) && empty($frameHeight)) {
-            throw new Exception('Invalid image dimensions.');
+            throw new Image_Processor_Adapter_Exception('Invalid image dimensions.');
         }
 
         // calculate lacking dimension
@@ -345,7 +371,7 @@ class Image_Processor_Adapter_Gd2 extends Image_Processor_Adapter_Abstract
         }
         $this->_imageHandler = imagerotate($this->_imageHandler, $angle, $backgroundColor);
 //*/
-        $this->_imageHandler = imagerotate($this->_imageHandler, $angle, $this->imageBackgroundColor);
+        $this->_imageHandler = imagerotate($this->_imageHandler, $angle, $this->getImageBackgroundColor());
         $this->refreshImageDimensions();
     }
 
@@ -516,15 +542,6 @@ class Image_Processor_Adapter_Gd2 extends Image_Processor_Adapter_Abstract
 
         $this->_imageHandler = $canvas;
         $this->refreshImageDimensions();
-    }
-
-    public function checkDependencies()
-    {
-        foreach ( $this->_requiredExtensions as $value ) {
-            if ( !extension_loaded($value) ) {
-                throw new Exception("Required PHP extension '{$value}' was not loaded.");
-            }
-        }
     }
 
     private function refreshImageDimensions()

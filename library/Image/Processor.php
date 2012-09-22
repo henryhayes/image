@@ -30,7 +30,14 @@ class Image_Processor
      *
      * @var Image_Processor_Adapter_Abstract
      */
-    protected $_adapter;
+    protected $_adapterNamespace = 'Image_Processor_Adapter';
+
+    /**
+     * Contains the adapter object.
+     *
+     * @var Image_Processor_Adapter_Abstract
+     */
+    protected $_adapter = 'Gd2';
 
     /**
      * Location of the file name
@@ -46,13 +53,17 @@ class Image_Processor
      * @param string $fileName
      * @return void
      */
-    function __construct($fileName=null, $adapter=Image_Processor_Adapter::ADAPTER_GD2)
+    function __construct()
     {
-        $this->getAdapter($adapter);
-        $this->_fileName = $fileName;
-        if( isset($fileName) ) {
-            $this->open();
-        }
+        $this->init();
+    }
+
+    /**
+     *
+     */
+    public function init()
+    {
+
     }
 
     /**
@@ -65,8 +76,8 @@ class Image_Processor
     {
         $this->getAdapter()->checkDependencies();
 
-        if( !file_exists($this->_fileName) ) {
-            throw new Exception("File '{$this->_fileName}' does not exists.");
+        if (!file_exists($this->_fileName)) {
+            throw new Exception("File '{$this->_fileName}' does not exist");
         }
 
         $this->getAdapter()->open($this->_fileName);
@@ -136,6 +147,12 @@ class Image_Processor
         $this->getAdapter()->resize($width, $height);
     }
 
+    /**
+     * Should aspect ratio be maintained.
+     *
+     * @param bool $value
+     * @return bool|Varien_Image_Adapter_Abstract
+     */
     public function keepAspectRatio($value)
     {
         return $this->getAdapter()->keepAspectRatio($value);
@@ -185,7 +202,7 @@ class Image_Processor
      */
     public function watermark($watermarkImage, $positionX=0, $positionY=0, $watermarkImageOpacity=30, $repeat=false)
     {
-        if( !file_exists($watermarkImage) ) {
+        if (!file_exists($watermarkImage)) {
             throw new Exception("Required file '{$watermarkImage}' does not exists.");
         }
         $this->getAdapter()->watermark($watermarkImage, $positionX, $positionY, $watermarkImageOpacity, $repeat);
@@ -233,7 +250,7 @@ class Image_Processor
      */
     public function setImageBackgroundColor($color)
     {
-        $this->getAdapter()->imageBackgroundColor = intval($color);
+        $this->getAdapter()->setImageBackgroundColor(intval($color));
     }
 
     /**
@@ -293,7 +310,6 @@ class Image_Processor
     protected function setAdapter(Image_Processor_Adapter_Abstract $adapter)
     {
         $this->_adapter = $adapter;
-
         return $this;
     }
 
@@ -304,11 +320,43 @@ class Image_Processor
      */
     protected function getAdapter()
     {
-        if(!($this->_adapter instanceof Image_Processor_Adapter_Abstract)) {
-            $this->_adapter = new Image_Processor_Adapter_Gd2();
+        if (!($this->_adapter instanceof Image_Processor_Adapter_Abstract)) {
+            if (is_null($this->_adapter)) {
+                throw new Image_Processor_Adapter_Exception('Invalid Adapter Specified');
+            }
+            $class = $this->getAdapterNamespace() . '_' . $this->_adapter;
+
+            if ('Image_Processor_Adapter' == $this->getAdapterNamespace()) {
+                $classPath = str_replace('_', DIRECTORY_SEPARATOR, $class) . '.php';
+                require_once($classPath);
+            }
+
+            $this->_adapter = new $class();
         }
 
         return $this->_adapter;
+    }
+
+    /**
+     * Sets the adapter name string.
+     *
+     * @param string $adapterName
+     * @return Image_Processor
+     */
+    public function setAdapterName($adapterName)
+    {
+        $this->_adapter = $adapterName;
+        return $this;
+    }
+
+    /**
+     * @see Dfp_Datafeed_Transfer_Interface::setAdapterNamespace()
+     * @return Image_Processor
+     */
+    public function setAdapterNamespace($namespace)
+    {
+        $this->_adapterNamespace = $namespace;
+        return $this;
     }
 
     /**

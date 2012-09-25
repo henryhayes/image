@@ -220,28 +220,6 @@ class Image_Processor
     }
 
     /**
-     * process
-     *
-     * @access public
-     * @return void
-     */
-    public function process()
-    {
-
-    }
-
-    /**
-     * instruction
-     *
-     * @access public
-     * @return void
-     */
-    public function instruction()
-    {
-
-    }
-
-    /**
      * Set image background color
      *
      * @param int $color
@@ -377,5 +355,30 @@ class Image_Processor
     public function getOriginalHeight()
     {
         return $this->getAdapter()->getOriginalHeight();
+    }
+
+    /**
+     * Magic method to replace all the facade methods.
+     *
+     * @param  string $name
+     * @param  string $args
+     * @throws BadMethodCallException
+     * @return Image_Processor
+     */
+    public function __call($name, $args)
+    {
+        if (!method_exists($this->getAdapter(), $name)) {
+            throw new BadMethodCallException(
+                sprintf("Method '{$name}' does not exist in adapter '%s'", get_class($this->getAdapter()))
+            );
+        }
+
+        $returnValue = call_user_func_array(array($this->getAdapter(), $name), $args);
+
+        if ('set' == substr($name, 0, 3)) {
+            return $this;
+        }
+
+        return $returnValue;
     }
 }

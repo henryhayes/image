@@ -280,9 +280,31 @@ class Image_Processor
     }
 
     /**
+     * Sets the file name of the current image being processed.
+     *
+     * @param  string $fileName
+     * @return Image_Processor
+     */
+    protected function setFileName($fileName)
+    {
+        $this->_fileName = $fileName;
+        return $this;
+    }
+
+    /**
+     * Get's the file name of the current image being processed.
+     *
+     * @return string
+     */
+    protected function getFileName()
+    {
+        return $this->_fileName;
+    }
+
+    /**
      * Sets the adapter to use.
      *
-     * @param Image_Processor_Adapter_Abstract
+     * @param Image_Processor_Adapter_Abstract $adapter
      * @return Image_Processor
      */
     protected function setAdapter(Image_Processor_Adapter_Abstract $adapter)

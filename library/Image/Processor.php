@@ -304,7 +304,7 @@ class Image_Processor
     /**
      * Sets the adapter to use.
      *
-     * @param Image_Processor_Adapter_Abstract $adapter
+     * @param  Image_Processor_Adapter_Abstract $adapter
      * @return Image_Processor
      */
     protected function setAdapter(Image_Processor_Adapter_Abstract $adapter)
@@ -340,7 +340,7 @@ class Image_Processor
     /**
      * Sets the adapter name string.
      *
-     * @param string $adapterName
+     * @param  string $adapterName
      * @return Image_Processor
      */
     public function setAdapterName($adapterName)
@@ -350,7 +350,7 @@ class Image_Processor
     }
 
     /**
-     * @see Dfp_Datafeed_Transfer_Interface::setAdapterNamespace()
+     * @see    Dfp_Datafeed_Transfer_Interface::setAdapterNamespace()
      * @return Image_Processor
      */
     public function setAdapterNamespace($namespace)

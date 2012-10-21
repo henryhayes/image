@@ -62,6 +62,11 @@ class Image_Processor_Adapter_Gd2 extends Image_Processor_Adapter_Abstract
         $this->_imageHandler = call_user_func($this->_getCallback('create'), $this->_fileName);
     }
 
+    /**
+     * Saves the new, processed or resized file.
+     *
+     * @return void
+     */
     public function save($destination=null, $newName=null)
     {
         $fileName = ( !isset($destination) ) ? $this->_fileName : $destination;
@@ -81,14 +86,14 @@ class Image_Processor_Adapter_Gd2 extends Image_Processor_Adapter_Abstract
         $destinationDir = ( isset($destination) ) ? $destination : $this->_fileSrcPath;
 
         if (!is_writable($destinationDir)) {
-            try {
-                /**
-                 * @todo Find a new way of creating a non-existent path to save to.
-                 */
-                $io = new Varien_Io_File();
-                $io->mkdir($destination);
-            } catch (Exception $e) {
-                throw new Image_Processor_Adapter_Exception(
+
+            $mkdirResult = @mkdir($destinationDir, 0777, true);
+            if ($mkdirResult) {
+
+                @chmod($dir, 0777);
+
+            } else {
+                throw new PriceSpin_Image_Exception(
                     "Unable to write file into directory '{$destinationDir}'. Access forbidden."
                 );
             }

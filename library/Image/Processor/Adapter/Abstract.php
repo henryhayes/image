@@ -17,6 +17,14 @@
  * @since      Thursday, 20 September 2012
  */
 /**
+ * @see Image_Processor_Adapter_Interface
+ */
+require_once('Image/Processor/Adapter/Interface.php');
+/**
+ * @see Image_Processor_Adapter_Exception
+ */
+require_once('Image/Processor/Adapter/Exception.php');
+/**
  * Image processor adapter abstract class.
  *
  * @category   Image
@@ -30,11 +38,15 @@ abstract class Image_Processor_Adapter_Abstract implements Image_Processor_Adapt
     /**
      * An array of required extensions to make this adapter work.
      *
-     * @var unknown_type
+     * @var array
      */
     protected $_requiredExtensions = array();
 
-    public $fileName = null;
+    /**
+     * Image background colour - used for rotate.
+     *
+     * @var int
+     */
     protected $_imageBackgroundColor = 0;
 
     /**#@+
@@ -68,45 +80,71 @@ abstract class Image_Processor_Adapter_Abstract implements Image_Processor_Adapt
     protected $_watermarkWidth;
     protected $_watermarkHeigth;
     protected $_watermarkImageOpacity;
-    protected $_quality;
-    protected $_keepFrame;
-    protected $_keepTransparency;
-    protected $_backgroundColor;
-    protected $_constrainOnly;
+    protected $_quality          = 80;
+    protected $_keepAspectRatio  = true; // Maintain aspect ratio?
+    protected $_keepFrame        = false; // Make a box, and fit image inside?
+    protected $_keepTransparency = false;
+    protected $_backgroundColor  = array(255, 255, 255);
+    protected $_constrainOnly    = true; // (bool)true Stops image from resizing larger than original?
     /**#@-*/
 
-    /**#@+
-     * Protected property
-     *
-     * @property boolean
-     */
-    protected $_keepAspectRatio = true;
-    /**#@-*/
-
-    abstract public function open($fileName);
-
-    abstract public function save($destination=null, $newName=null);
-
-    abstract public function display();
-
-    abstract public function resize($width=null, $height=null);
-
-    abstract public function rotate($angle);
-
-    abstract public function crop($top=0, $left=0, $right=0, $bottom=0);
-
-    abstract public function watermark($watermarkImage, $positionX=0, $positionY=0,
-        $watermarkImageOpacity=30, $repeat=false);
+    public function __construct()
+    {
+        //
+    }
 
     public function getMimeType()
     {
-        if ($this->_fileType) {
-            return $this->_fileType;
-        } else {
-            list($this->_imageSrcWidth, $this->_imageSrcHeight, $this->_fileType) = getimagesize($this->_fileName);
-            $this->_fileMimeType = image_type_to_mime_type($this->_fileType);
-            return $this->_fileMimeType;
+        if (is_null($this->_fileMimeType)) {
+            $this->_fileMimeType = image_type_to_mime_type($this->getImageSrcFileType());
         }
+
+        return $this->_fileMimeType;
+    }
+
+    /**
+     * Sets the location of the file to be used for processing.
+     *
+     * @param  string $fileName
+     * @throws Image_Processor_Adapter_Exception
+     * @return Image_Processor_Adapter_Abstract
+     */
+    public function setFileName($fileName)
+    {
+        if (empty($fileName)) {
+            throw new Image_Processor_Adapter_Exception('The file name / location was empty');
+        }
+
+        @clearstatcache();
+        if (!@is_readable($fileName)) {
+            throw new Image_Processor_Adapter_Exception(
+                "The file name / location '{$fileName}' was not readable"
+            );
+        }
+
+        $this->_fileName = $fileName;
+
+        $this->_getFileAttributes();
+        $this->_getImageStatistics();
+
+        return $this;
+    }
+
+    /**
+     * Get's the file name location.
+     *
+     * @throws Image_Processor_Adapter_Exception
+     * @return string
+     */
+    public function getFileName()
+    {
+        if (is_null($this->_fileName)) {
+            throw new Image_Processor_Adapter_Exception(
+                'The source file location was not set, you must set the location before attempting to use it'
+            );
+        }
+
+        return $this->_fileName;
     }
 
     /**
@@ -116,7 +154,7 @@ abstract class Image_Processor_Adapter_Abstract implements Image_Processor_Adapt
      */
     public function getOriginalWidth()
     {
-        $this->getMimeType();
+        $this->_getImageStatistics();
         return $this->_imageSrcWidth;
     }
 
@@ -127,7 +165,7 @@ abstract class Image_Processor_Adapter_Abstract implements Image_Processor_Adapt
      */
     public function getOriginalHeight()
     {
-        $this->getMimeType();
+        $this->_getImageStatistics();
         return $this->_imageSrcHeight;
     }
 
@@ -166,6 +204,54 @@ abstract class Image_Processor_Adapter_Abstract implements Image_Processor_Adapt
         $this->_imageBackgroundColor = $color;
         return $this;
     }
+
+    public function setKeepAspectRatio($value)
+    {
+        $this->_keepAspectRatio = (bool)$value;
+        return $this;
+    }
+
+    public function setKeepFrame($value)
+    {
+        $this->_keepFrame = (bool)$value;
+        return $this;
+    }
+
+    public function setKeepTransparency($value)
+    {
+        $this->_keepTransparency = (bool)$value;
+        return $this;
+    }
+
+    public function setConstrainOnly($value)
+    {
+        $this->_constrainOnly = (bool)$value;
+        return $this;
+    }
+
+    public function setQuality($value)
+    {
+        $this->_quality = (int)$value;
+        return $this;
+    }
+
+    public function setBackgroundColor(array $value)
+    {
+        if ((!is_array($value)) || (3 !== count($value))) {
+            throw new InvalidArgumentException(
+                'Background colour must be an array with 3 elements containing valid RGB values.'
+            );
+        }
+        foreach ($value as $color) {
+            if ((!is_integer($color)) || ($color < 0) || ($color > 255)) {
+                throw new InvalidArgumentException(
+                    "Colour must be a valid RGB value. You passed '{$color}'."
+                );
+            }
+        }
+        $this->_backgroundColor = $value;
+        return $this;
+    }
     /**#@-*/
 
     /**#@+
@@ -197,99 +283,67 @@ abstract class Image_Processor_Adapter_Abstract implements Image_Processor_Adapt
     {
         return $this->_imageBackgroundColor;
     }
-    /**#@-*/
 
-    /**
-     * Get/set keepAspectRatio
-     *
-     * @param bool $value
-     * @return bool|Varien_Image_Adapter_Abstract
-     */
-    public function keepAspectRatio($value = null)
+    public function getKeepAspectRatio()
     {
-        if (null !== $value) {
-            $this->_keepAspectRatio = (bool)$value;
-        }
         return $this->_keepAspectRatio;
     }
 
-    /**
-     * Get/set keepFrame
-     *
-     * @param bool $value
-     * @return bool
-     */
-    public function keepFrame($value = null)
+    public function getKeepFrame()
     {
-        if (null !== $value) {
-            $this->_keepFrame = (bool)$value;
-        }
         return $this->_keepFrame;
     }
 
-    /**
-     * Get/set keepTransparency
-     *
-     * @param bool $value
-     * @return bool
-     */
-    public function keepTransparency($value = null)
+    public function getKeepTransparency()
     {
-        if (null !== $value) {
-            $this->_keepTransparency = (bool)$value;
-        }
         return $this->_keepTransparency;
     }
 
-    /**
-     * Get/set constrainOnly
-     *
-     * @param bool $value
-     * @return bool
-     */
-    public function constrainOnly($value = null)
+    public function getConstrainOnly()
     {
-        if (null !== $value) {
-            $this->_constrainOnly = (bool)$value;
-        }
         return $this->_constrainOnly;
     }
 
-    /**
-     * Get/set quality, values in percentage from 0 to 100
-     *
-     * @param int $value
-     * @return int
-     */
-    public function quality($value = null)
+    public function getQuality()
     {
-        if (null !== $value) {
-            $this->_quality = (int)$value;
-        }
         return $this->_quality;
     }
 
-    /**
-     * Get/set keepBackgroundColor
-     *
-     * @param array $value
-     * @return array
-     */
-    public function backgroundColor($value = null)
+    public function getBackgroundColor()
     {
-        if (null !== $value) {
-            if ((!is_array($value)) || (3 !== count($value))) {
-                return;
-            }
-            foreach ($value as $color) {
-                if ((!is_integer($color)) || ($color < 0) || ($color > 255)) {
-                    return;
-                }
-            }
-        }
-        $this->_backgroundColor = $value;
         return $this->_backgroundColor;
     }
+
+    public function getImageSrcWidth()
+    {
+        $this->_getImageStatistics();
+        return $this->_imageSrcWidth;
+    }
+
+    public function getImageSrcHeight()
+    {
+        $this->_getImageStatistics();
+        return $this->_imageSrcHeight;
+    }
+
+    public function getImageSrcFileType()
+    {
+        $this->_getImageStatistics();
+        return $this->_fileType;
+    }
+
+    public function getFileSrcPath()
+    {
+        $this->_getFileAttributes();
+        return $this->_fileSrcPath;
+    }
+
+    public function getFileSrcName()
+    {
+        $this->_getFileAttributes();
+        return $this->_fileSrcName;
+    }
+    /**#@-*/
 
     /**
      * This method checks pependencies based on the {@see $this->_requiredExtensions} array.
@@ -308,13 +362,29 @@ abstract class Image_Processor_Adapter_Abstract implements Image_Processor_Adapt
     }
 
     /**
-     * Sets the file attributes into {@see $this->_fileSrcPath} and  {@see $this->_fileSrcName}.
+     * Gets the image statistics and sets them into their respective properties.
+     *
+     * @return void
+     */
+    protected function _getImageStatistics()
+    {
+        // This function does not require the GD image library.
+        list($this->_imageSrcWidth, $this->_imageSrcHeight, $this->_fileType) = getimagesize($this->getFileName());
+    }
+
+    /**
+     * Gets the image file attributes and sets them into their respective properties.
+     *
+     * @return void
      */
     protected function _getFileAttributes()
     {
-        $pathinfo = pathinfo($this->_fileName);
+        if (is_null($this->_fileSrcPath) || is_null($this->_fileSrcName)) {
 
-        $this->_fileSrcPath = $pathinfo['dirname'];
-        $this->_fileSrcName = $pathinfo['basename'];
+            $pathinfo = pathinfo($this->getFileName());
+
+            $this->_fileSrcPath = $pathinfo['dirname'];
+            $this->_fileSrcName = $pathinfo['basename'];
+        }
     }
 }

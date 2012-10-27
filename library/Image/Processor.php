@@ -16,6 +16,10 @@
  * @since      Thursday, 20 September 2012
  */
 /**
+ * @see Image_Processor_Adapter_Interface
+ */
+require_once('Image/Processor/Adapter/Interface.php');
+/**
  * Image processor class.
  *
  * @category   Image
@@ -23,12 +27,12 @@
  * @copyright  Copyright (c) 2012 PHP Image Manipulation & Processing Library
  * @license    http://www.opensource.org/licenses/bsd-license.php
  */
-class Image_Processor
+class Image_Processor implements Image_Processor_Adapter_Interface
 {
     /**
      * Contains the adapter object.
      *
-     * @var Image_Processor_Adapter_Abstract
+     * @var string
      */
     protected $_adapterNamespace = 'Image_Processor_Adapter';
 
@@ -40,165 +44,100 @@ class Image_Processor
     protected $_adapter = 'Gd2';
 
     /**
-     * Location of the file name
+     * Static constructor, returns a new instance of this class.
      *
-     * @var string
+     * @return Image_Processor
      */
-    protected $_fileName;
-
-    /**
-     * Constructor
-     *
-     * @param Image_Processor_Adapter $adapter. Default value is GD2
-     * @param string $fileName
-     * @return void
-     */
-    function __construct()
+    public static function getInstance()
     {
-        $this->init();
-    }
-
-    /**
-     *
-     */
-    public function init()
-    {
-
+        return new static();
     }
 
     /**
      * Opens an image and creates image handle
      *
-     * @access public
-     * @return void
+     * @return Image_Processor
      */
-    public function open()
+    public function open($fileName = null)
     {
-        $this->getAdapter()->checkDependencies();
+        $this->getAdapter()->open($fileName);
+        return $this;
 
-        if (!file_exists($this->_fileName)) {
-            throw new Exception("File '{$this->_fileName}' does not exist");
-        }
-
-        $this->getAdapter()->open($this->_fileName);
-    }
-
-    /**
-     * Display handled image in your browser
-     *
-     * @access public
-     * @return void
-     */
-    public function display()
-    {
-        $this->getAdapter()->display();
     }
 
     /**
      * Save handled image into file
      *
-     * @param string $destination. Default value is NULL
-     * @param string $newFileName. Default value is NULL
-     * @access public
-     * @return void
+     * @param  string $destination. Default value is NULL
+     * @param  string $newFileName. Default value is NULL
+     * @return Image_Processor
      */
-    public function save($destination=null, $newFileName=null)
+    public function save($destination = null, $newFileName = null)
     {
         $this->getAdapter()->save($destination, $newFileName);
+        return $this;
+    }
+
+    /**
+     * Display handled image in your browser
+     *
+     * @return Image_Processor
+     */
+    public function display()
+    {
+        $this->getAdapter()->display();
+        return $this;
     }
 
     /**
      * Rotate an image.
      *
-     * @param int $angle
-     * @access public
-     * @return void
+     * @param  int $angle
+     * @return Image_Processor
      */
     public function rotate($angle)
     {
         $this->getAdapter()->rotate($angle);
+        return $this;
     }
 
     /**
      * Crop an image.
      *
-     * @param int $top. Default value is 0
-     * @param int $left. Default value is 0
-     * @param int $right. Default value is 0
-     * @param int $bottom. Default value is 0
-     * @access public
-     * @return void
+     * @param  int $top. Default value is 0
+     * @param  int $left. Default value is 0
+     * @param  int $right. Default value is 0
+     * @param  int $bottom. Default value is 0
+     * @return Image_Processor
      */
     public function crop($top=0, $left=0, $right=0, $bottom=0)
     {
         $this->getAdapter()->crop($top, $left, $right, $bottom);
+        return $this;
     }
 
     /**
-     * Resize an image
+     * Resize an image.
      *
-     * @param int $width
-     * @param int $height
-     * @access public
-     * @return void
+     * @param  int $width
+     * @param  int $height
+     * @return Image_Processor
      */
     public function resize($width, $height = null)
     {
         $this->getAdapter()->resize($width, $height);
-    }
-
-    /**
-     * Should aspect ratio be maintained.
-     *
-     * @param bool $value
-     * @return bool|Varien_Image_Adapter_Abstract
-     */
-    public function keepAspectRatio($value)
-    {
-        return $this->getAdapter()->keepAspectRatio($value);
-    }
-
-    public function keepFrame($value)
-    {
-        return $this->getAdapter()->keepFrame($value);
-    }
-
-    public function keepTransparency($value)
-    {
-        return $this->getAdapter()->keepTransparency($value);
-    }
-
-    public function constrainOnly($value)
-    {
-        return $this->getAdapter()->constrainOnly($value);
-    }
-
-    public function backgroundColor($value)
-    {
-        return $this->getAdapter()->backgroundColor($value);
-    }
-
-    /**
-     * Get/set quality, values in percentage from 0 to 100
-     *
-     * @param int $value
-     * @return int
-     */
-    public function quality($value)
-    {
-        return $this->getAdapter()->quality($value);
+        return $this;
     }
 
     /**
      * Adds watermark to our image.
      *
-     * @param string $watermarkImage. Absolute path to watermark image.
-     * @param int $positionX. Watermark X position.
-     * @param int $positionY. Watermark Y position.
-     * @param int $watermarkImageOpacity. Watermark image opacity.
-     * @param bool $repeat. Enable or disable watermark brick.
-     * @access public
-     * @return void
+     * @param  string $watermarkImage. Absolute path to watermark image.
+     * @param  int $positionX. Watermark X position.
+     * @param  int $positionY. Watermark Y position.
+     * @param  int $watermarkImageOpacity. Watermark image opacity.
+     * @param  bool $repeat. Enable or disable watermark brick.
+     * @return Image_Processor
      */
     public function watermark($watermarkImage, $positionX=0, $positionY=0, $watermarkImageOpacity=30, $repeat=false)
     {
@@ -206,6 +145,8 @@ class Image_Processor
             throw new Exception("Required file '{$watermarkImage}' does not exists.");
         }
         $this->getAdapter()->watermark($watermarkImage, $positionX, $positionY, $watermarkImageOpacity, $repeat);
+
+        return $this;
     }
 
     /**
@@ -217,88 +158,6 @@ class Image_Processor
     public function getMimeType()
     {
         return $this->getAdapter()->getMimeType();
-    }
-
-    /**
-     * Set image background color
-     *
-     * @param int $color
-     * @access public
-     * @return void
-     */
-    public function setImageBackgroundColor($color)
-    {
-        $this->getAdapter()->setImageBackgroundColor(intval($color));
-    }
-
-    /**
-     * Set watermark position
-     *
-     * @param string $position
-     * @return Image_Processor
-     */
-    public function setWatermarkPosition($position)
-    {
-        $this->getAdapter()->setWatermarkPosition($position);
-        return $this;
-    }
-
-    /**
-     * Set watermark image opacity
-     *
-     * @param int $imageOpacity
-     * @return Image_Processor
-     */
-    public function setWatermarkImageOpacity($imageOpacity)
-    {
-        $this->getAdapter()->setWatermarkImageOpacity($imageOpacity);
-        return $this;
-    }
-
-    /**
-     * Set watermark width
-     *
-     * @param int $width
-     * @return Image_Processor
-     */
-    public function setWatermarkWidth($width)
-    {
-        $this->getAdapter()->setWatermarkWidth($width);
-        return $this;
-    }
-
-    /**
-     * Set watermark heigth
-     *
-     * @param int $heigth
-     * @return Image_Processor
-     */
-    public function setWatermarkHeigth($heigth)
-    {
-        $this->getAdapter()->setWatermarkHeigth($heigth);
-        return $this;
-    }
-
-    /**
-     * Sets the file name of the current image being processed.
-     *
-     * @param  string $fileName
-     * @return Image_Processor
-     */
-    protected function setFileName($fileName)
-    {
-        $this->_fileName = $fileName;
-        return $this;
-    }
-
-    /**
-     * Get's the file name of the current image being processed.
-     *
-     * @return string
-     */
-    protected function getFileName()
-    {
-        return $this->_fileName;
     }
 
     /**
@@ -350,7 +209,9 @@ class Image_Processor
     }
 
     /**
-     * @see    Dfp_Datafeed_Transfer_Interface::setAdapterNamespace()
+     * Sets the adapter namespace.
+     *
+     * @param  string $namespace
      * @return Image_Processor
      */
     public function setAdapterNamespace($namespace)
@@ -360,44 +221,34 @@ class Image_Processor
     }
 
     /**
-     * Retrieve original image width
+     * Returns the adapters namespace as a string.
      *
-     * @return int|null
+     * @return string
      */
-    public function getOriginalWidth()
+    public function getAdapterNamespace()
     {
-        return $this->getAdapter()->getOriginalWidth();
-    }
-
-    /**
-     * Retrieve original image height
-     *
-     * @return int|null
-     */
-    public function getOriginalHeight()
-    {
-        return $this->getAdapter()->getOriginalHeight();
+        return $this->_adapterNamespace;
     }
 
     /**
      * Magic method to replace all the facade methods.
      *
      * @param  string $name
-     * @param  string $args
+     * @param  array  $args
      * @throws BadMethodCallException
      * @return Image_Processor
      */
-    public function __call($name, $args)
+    public function __call($method, array $args)
     {
-        if (!method_exists($this->getAdapter(), $name)) {
+        if (!method_exists($this->getAdapter(), $method)) {
             throw new BadMethodCallException(
-                sprintf("Method '{$name}' does not exist in adapter '%s'", get_class($this->getAdapter()))
+                sprintf("Method '{$method}' does not exist in adapter '%s'", get_class($this->getAdapter()))
             );
         }
 
-        $returnValue = call_user_func_array(array($this->getAdapter(), $name), $args);
+        $returnValue = call_user_func_array(array($this->getAdapter(), $method), $args);
 
-        if ('set' == substr($name, 0, 3)) {
+        if ('set' == substr($method, 0, 3)) {
             return $this;
         }
 

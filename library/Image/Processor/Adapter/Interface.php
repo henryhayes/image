@@ -30,65 +30,74 @@ interface Image_Processor_Adapter_Interface
     /**
      * Opens the file with the appropriate image type handler.
      *
-     * @param string $fileName
+     * @param  string $fileName
+     * @return Image_Processor_Adapter_Interface
      */
-    public function open($fileName);
+    public function open($fileName = null);
 
     /**
      * Saves the image to the detination specified with the newName specified.
      *
-     * @param string $destination
-     * @param string $newName
+     * @param  string $destination
+     * @param  string $newName
+     * @return Image_Processor_Adapter_Interface
      */
-    public function save($destination=null, $newName=null);
+    public function save($destination = null, $newName = null);
 
     /**
      * Outputs the image in it's current state to the screen, setting
      * the correct mime-type as a content-type header.
+     *
+     * @return void
      */
     public function display();
 
     /**
      * Resizes the current image to the specified width and height.
      *
-     * @param int $width
-     * @param int $height
+     * @param  int $width
+     * @param  int $height
+     * @return Image_Processor_Adapter_Interface
      */
-    public function resize($width=null, $height=null);
+    public function resize($width, $height = null);
 
     /**
      * Rotates the image by the specified angle.
      *
-     * @param int $angle
+     * @param  int $angle
+     * @return Image_Processor_Adapter_Interface
      */
     public function rotate($angle);
 
     /**
      * Crops the image by the specified parameters.
      *
-     * @param int $top
-     * @param int $left
-     * @param int $right
-     * @param int $bottom
+     * @param  int $top
+     * @param  int $left
+     * @param  int $right
+     * @param  int $bottom
+     * @return Image_Processor_Adapter_Interface
      */
     public function crop($top=0, $left=0, $right=0, $bottom=0);
 
     /**
      * Sets the watermark image specified at the location specified.
      *
-     * @param string $watermarkImage
-     * @param int $positionX
-     * @param int $positionY
-     * @param int $watermarkImageOpacity
-     * @param bool $repeat
+     * @param  string $watermarkImage
+     * @param  int $positionX
+     * @param  int $positionY
+     * @param  int $watermarkImageOpacity
+     * @param  bool $repeat
+     * @return Image_Processor_Adapter_Interface
      */
     public function watermark($watermarkImage, $positionX=0, $positionY=0,
         $watermarkImageOpacity=30, $repeat=false);
 
     /**
-     * Checks the dependencies for the adapter.
+     * Get mime type of handled image
      *
-     * @throws Exception
+     * @access public
+     * @return string
      */
-    public function checkDependencies();
+    public function getMimeType();
 }

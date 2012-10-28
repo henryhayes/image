@@ -55,7 +55,7 @@ class Image_Processor_Adapter_AbstractTest extends PHPUnit_Framework_TestCase
      */
     public function testSetFileNameWithUnreadabelFile()
     {
-        $fileName = $this->createTempVfsFile(0622);
+        $fileName = $this->createTempVfsFile(0222); // No-one can read, but all write
 
         $abstract = $this->getSutMock();
 
@@ -93,7 +93,7 @@ class Image_Processor_Adapter_AbstractTest extends PHPUnit_Framework_TestCase
      */
     public function getSutMock(array $arguments = array(), $mockedMethods = array())
     {
-        srand(time() . rand(1,150111));
+        srand(time() . rand(1, 150111));
 
         return $this->getMockForAbstractClass(
             'Image_Processor_Adapter_Abstract',

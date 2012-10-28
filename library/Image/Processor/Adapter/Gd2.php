@@ -577,6 +577,15 @@ class Image_Processor_Adapter_Gd2 extends Image_Processor_Adapter_Abstract
         $this->refreshImageDimensions();
     }
 
+    /**
+     * Crops the image by the specified parameters.
+     *
+     * @param  int $top
+     * @param  int $left
+     * @param  int $right
+     * @param  int $bottom
+     * @return Image_Processor_Adapter_Gd2
+     */
     public function crop($top=0, $left=0, $right=0, $bottom=0)
     {
         if ($left == 0 && $top == 0 && $right == 0 && $bottom == 0) {
@@ -604,16 +613,24 @@ class Image_Processor_Adapter_Gd2 extends Image_Processor_Adapter_Abstract
         $this->refreshImageDimensions();
     }
 
+    /**
+     * Refreshes image dimensions.
+     */
     private function refreshImageDimensions()
     {
         $this->_imageSrcWidth = imagesx($this->getImageHandler());
         $this->_imageSrcHeight = imagesy($this->getImageHandler());
     }
 
-    /* function __destruct()
+    /**
+     * Removed from __destructor so that it's called manually.
+     *
+     * @return void
+     */
+    function close()
     {
         @imagedestroy($this->getImageHandler());
-    } */
+    }
 
     /*
      * Fixes saving PNG alpha channel

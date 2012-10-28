@@ -1,7 +1,7 @@
 <?php
 define('DS', DIRECTORY_SEPARATOR);
 define('PS', PATH_SEPARATOR);
-define('BASE_PATH', dirname(dirname(__FILE__)));
+define('BASE_PATH', dirname(dirname(realpath(__FILE__))));
 define('LIBRARY_PATH', BASE_PATH . DS . 'library');
 define('IMAGES_PATH', BASE_PATH . DS .  'examples' . DS . 'images');
 define('TEMP_PATH', BASE_PATH . DS .  'examples' . DS . 'temp');

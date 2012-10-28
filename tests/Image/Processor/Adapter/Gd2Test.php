@@ -114,7 +114,7 @@ class Image_Processor_Adapter_Gd2Test extends PHPUnit_Framework_TestCase
         }
 
         /**
-         * Creates box, keeps aspect ratio and
+         * Run the test with the data provider information.
          */
         $sut = new Image_Processor_Adapter_Gd2();
         $sut->setFileName($tempImage);
@@ -129,6 +129,11 @@ class Image_Processor_Adapter_Gd2Test extends PHPUnit_Framework_TestCase
 
     }
 
+    /**
+     * Data provider for the above unit test.
+     *
+     * @return array
+     */
     public function resizeDataProvider()
     {
         return array(
@@ -138,6 +143,11 @@ class Image_Processor_Adapter_Gd2Test extends PHPUnit_Framework_TestCase
         );
     }
 
+    /**
+     * Creates a temporary image for unit testing.
+     *
+     * @return string Name/location of image file for the unit test.
+     */
     public function createTemporaryImage()
     {
         $tmpDir = sys_get_temp_dir();

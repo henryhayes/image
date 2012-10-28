@@ -54,13 +54,13 @@ abstract class Image_Processor_Adapter_Abstract implements Image_Processor_Adapt
      *
      * @var string
      */
-    const POSITION_TOP_LEFT = 'top-left';
-    const POSITION_TOP_RIGHT = 'top-right';
-    const POSITION_BOTTOM_LEFT = 'bottom-left';
+    const POSITION_TOP_LEFT     = 'top-left';
+    const POSITION_TOP_RIGHT    = 'top-right';
+    const POSITION_BOTTOM_LEFT  = 'bottom-left';
     const POSITION_BOTTOM_RIGHT = 'bottom-right';
-    const POSITION_STRETCH = 'stretch';
-    const POSITION_TILE = 'tile';
-    const POSITION_CENTER = 'center';
+    const POSITION_STRETCH      = 'stretch';
+    const POSITION_TILE         = 'tile';
+    const POSITION_CENTER       = 'center';
     /**#@-*/
 
     /**#@+
@@ -68,7 +68,6 @@ abstract class Image_Processor_Adapter_Abstract implements Image_Processor_Adapt
      *
      * @property string
      */
-    protected $_fileType;
     protected $_fileName;
     protected $_fileMimeType;
     protected $_fileSrcName;
@@ -76,16 +75,17 @@ abstract class Image_Processor_Adapter_Abstract implements Image_Processor_Adapt
     protected $_imageHandler;
     protected $_imageSrcWidth;
     protected $_imageSrcHeight;
+    protected $_fileType;
     protected $_watermarkPosition;
+    protected $_watermarkImageOpacity;
     protected $_watermarkWidth;
     protected $_watermarkHeigth;
-    protected $_watermarkImageOpacity;
-    protected $_quality          = 80;
     protected $_keepAspectRatio  = true; // Maintain aspect ratio?
     protected $_keepFrame        = false; // Make a box, and fit image inside?
     protected $_keepTransparency = false;
-    protected $_backgroundColor  = array(255, 255, 255);
     protected $_constrainOnly    = true; // (bool)true Stops image from resizing larger than original?
+    protected $_quality          = 80;
+    protected $_backgroundColor  = array(255, 255, 255);
     /**#@-*/
 
     public function __construct()
@@ -96,7 +96,7 @@ abstract class Image_Processor_Adapter_Abstract implements Image_Processor_Adapt
     public function getMimeType()
     {
         if (is_null($this->_fileMimeType)) {
-            $this->_fileMimeType = image_type_to_mime_type($this->getImageSrcFileType());
+            $this->_fileMimeType = $this->_imageTypeToMimeType();
         }
 
         return $this->_fileMimeType;
@@ -151,28 +151,28 @@ abstract class Image_Processor_Adapter_Abstract implements Image_Processor_Adapt
      * Retrieve Original Image Width
      *
      * @return int|null
+     * @deprecated Please use {@see Image_Processor_Adapter_Abstract::getImageSrcWidth()}
      */
     public function getOriginalWidth()
     {
-        $this->_getImageStatistics();
-        return $this->_imageSrcWidth;
+        return $this->getImageSrcWidth();
     }
 
     /**
      * Retrieve Original Image Height
      *
      * @return int|null
+     * @deprecated Please use {@see Image_Processor_Adapter_Abstract::getImageSrcHeight()}
      */
     public function getOriginalHeight()
     {
-        $this->_getImageStatistics();
-        return $this->_imageSrcHeight;
+        return $this->getImageSrcHeight();
     }
 
     /**#@+
      * Property setter
      *
-     * @param  string
+     * @param  mixed
      * @return Image_Processor_Adapter_Abstract
      */
     public function setWatermarkPosition($position)
@@ -234,10 +234,18 @@ abstract class Image_Processor_Adapter_Abstract implements Image_Processor_Adapt
         $this->_quality = (int)$value;
         return $this;
     }
+    /**#@-*/
 
+    /**
+     * Sets the background colour RGB value using a 3 element array.
+     *
+     * @param  array $value
+     * @throws InvalidArgumentException
+     * @return Image_Processor_Adapter_Abstract
+     */
     public function setBackgroundColor(array $value)
     {
-        if ((!is_array($value)) || (3 !== count($value))) {
+        if (3 !== count($value)) {
             throw new InvalidArgumentException(
                 'Background colour must be an array with 3 elements containing valid RGB values.'
             );
@@ -245,14 +253,13 @@ abstract class Image_Processor_Adapter_Abstract implements Image_Processor_Adapt
         foreach ($value as $color) {
             if ((!is_integer($color)) || ($color < 0) || ($color > 255)) {
                 throw new InvalidArgumentException(
-                    "Colour must be a valid RGB value. You passed '{$color}'."
+                    "Colour must be a valid RGB value. You passed '{$color}'"
                 );
             }
         }
         $this->_backgroundColor = $value;
         return $this;
     }
-    /**#@-*/
 
     /**#@+
      * Property getter
@@ -346,6 +353,35 @@ abstract class Image_Processor_Adapter_Abstract implements Image_Processor_Adapt
     /**#@-*/
 
     /**
+     * Gets the image statistics and sets them into their respective properties.
+     *
+     * @return void
+     */
+    protected function _getImageStatistics()
+    {
+        // This function does not require the GD image library.
+        list($this->_imageSrcWidth, $this->_imageSrcHeight, $this->_fileType) = $this->_getImageSize();
+    }
+
+    /**
+     * Gets the image file attributes and sets them into their respective properties.
+     *
+     * @return void
+     */
+    protected function _getFileAttributes()
+    {
+        if (is_null($this->_fileSrcPath) || is_null($this->_fileSrcName)) {
+
+            $pathinfo = $this->_getpathInfo();
+
+            $this->_fileSrcPath = $pathinfo['dirname'];
+            $this->_fileSrcName = $pathinfo['basename'];
+        }
+    }
+
+    // @codeCoverageIgnoreStart
+
+    /**
      * This method checks pependencies based on the {@see $this->_requiredExtensions} array.
      *
      * @return Image_Processor_Adapter_Abstract
@@ -362,29 +398,29 @@ abstract class Image_Processor_Adapter_Abstract implements Image_Processor_Adapt
     }
 
     /**
-     * Gets the image statistics and sets them into their respective properties.
+     * Proxies directly to the pathinfo php function.
      *
-     * @return void
+     * @return array 2 elements required, dirname and basename
      */
-    protected function _getImageStatistics()
+    protected function _getpathInfo()
     {
-        // This function does not require the GD image library.
-        list($this->_imageSrcWidth, $this->_imageSrcHeight, $this->_fileType) = getimagesize($this->getFileName());
+        return pathinfo($this->getFileName());
     }
 
     /**
-     * Gets the image file attributes and sets them into their respective properties.
+     * Proxies directly to getimagesize php function. Does not require gd extension.
      *
-     * @return void
+     * @return array 3 elements
      */
-    protected function _getFileAttributes()
+    protected function _getImageSize()
     {
-        if (is_null($this->_fileSrcPath) || is_null($this->_fileSrcName)) {
-
-            $pathinfo = pathinfo($this->getFileName());
-
-            $this->_fileSrcPath = $pathinfo['dirname'];
-            $this->_fileSrcName = $pathinfo['basename'];
-        }
+        return getimagesize($this->getFileName());
     }
+
+    protected function _imageTypeToMimeType()
+    {
+        return image_type_to_mime_type($this->getImageSrcFileType());
+    }
+
+    // @codeCoverageIgnoreEnd
 }

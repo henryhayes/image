@@ -4,7 +4,7 @@
  */
 class Image_ProcessorTest extends PHPUnit_Framework_TestCase
 {
-    public function testGetttersAndSetters()
+    public function testGettersAndSetters()
     {
         //
     }

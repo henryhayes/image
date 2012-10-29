@@ -62,7 +62,6 @@ class Image_Processor implements Image_Processor_Adapter_Interface
     {
         $this->getAdapter()->open($fileName);
         return $this;
-
     }
 
     /**
@@ -182,10 +181,10 @@ class Image_Processor implements Image_Processor_Adapter_Interface
     /**
      * Sets the adapter to use.
      *
-     * @param  Image_Processor_Adapter_Abstract $adapter
+     * @param  Image_Processor_Adapter_Interface $adapter
      * @return Image_Processor
      */
-    protected function setAdapter(Image_Processor_Adapter_Abstract $adapter)
+    public function setAdapter(Image_Processor_Adapter_Interface $adapter)
     {
         $this->_adapter = $adapter;
         return $this;
@@ -194,11 +193,11 @@ class Image_Processor implements Image_Processor_Adapter_Interface
     /**
      * Retrieve image adapter object.
      *
-     * @return Image_Processor_Adapter_Abstract
+     * @return Image_Processor_Adapter_Interface
      */
     protected function getAdapter()
     {
-        if (!($this->_adapter instanceof Image_Processor_Adapter_Abstract)) {
+        if (!($this->_adapter instanceof Image_Processor_Adapter_Interface)) {
             if (is_null($this->_adapter)) {
                 throw new Image_Processor_Adapter_Exception('Invalid Adapter Specified');
             }

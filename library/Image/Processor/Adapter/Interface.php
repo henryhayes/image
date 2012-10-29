@@ -45,12 +45,25 @@ interface Image_Processor_Adapter_Interface
     public function save($destination = null, $newName = null);
 
     /**
-     * Outputs the image in it's current state to the screen, setting
-     * the correct mime-type as a content-type header.
+     * A convenience method to output the image to the screen.
      *
-     * @return void
+     * @return php://stdout
      */
     public function display();
+
+    /**
+     * Returns the image as a string ready to be printed to the screen.
+     *
+     * @return string
+     */
+    public function render();
+
+    /**
+     * Proxies directly to the render method.
+     *
+     * @return string
+     */
+    public function __toString();
 
     /**
      * Resizes the current image to the specified width and height.

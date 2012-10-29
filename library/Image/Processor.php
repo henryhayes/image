@@ -81,12 +81,31 @@ class Image_Processor implements Image_Processor_Adapter_Interface
     /**
      * Display handled image in your browser
      *
-     * @return Image_Processor
+     * @return php://stdout
      */
     public function display()
     {
         $this->getAdapter()->display();
-        return $this;
+    }
+
+    /**
+     * Returns the image as a string ready to be printed to the screen.
+     *
+     * @return string
+     */
+    public function render()
+    {
+        return $this->getAdapter()->render();
+    }
+
+    /**
+     * Proxies directly to the render method.
+     *
+     * @return string
+     */
+    public function __toString()
+    {
+        return $this->getAdapter()->__toString();
     }
 
     /**

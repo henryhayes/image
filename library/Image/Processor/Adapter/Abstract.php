@@ -93,6 +93,26 @@ abstract class Image_Processor_Adapter_Abstract implements Image_Processor_Adapt
         //
     }
 
+    /**
+     * A convenience method to output the image to the screen.
+     *
+     * @return php://stdout
+     */
+    public function display()
+    {
+        echo $this->render();
+    }
+
+    /**
+     * Proxies directly to the render method.
+     *
+     * @return string
+     */
+    public function __toString()
+    {
+        return $this->render();
+    }
+
     public function getMimeType()
     {
         if (is_null($this->_fileMimeType)) {

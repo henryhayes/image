@@ -35,6 +35,28 @@ require_once 'Image/Processor/Adapter/Abstract.php';
  */
 class Image_Processor_Adapter_AbstractTest extends PHPUnit_Framework_TestCase
 {
+
+    public function testDisplay()
+    {
+        $abstract = $this->getSutMock(array(), array('render'));
+        $abstract->expects($this->once())
+            ->method('render')
+            ->will($this->returnValue('hello'));
+
+        $this->expectOutputString('hello');
+        $abstract->display();
+    }
+
+    public function testToString()
+    {
+        $abstract = $this->getSutMock(array(), array('render'));
+        $abstract->expects($this->once())
+            ->method('render')
+            ->will($this->returnValue('hello'));
+
+        $this->expectOutputString('hello');
+        echo $abstract;
+    }
     /**
      * Tests setting file name with empty file name throws correct exception.
      */

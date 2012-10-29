@@ -59,6 +59,11 @@ class Image_Processor_Adapter_Gd2 extends Image_Processor_Adapter_Abstract
     protected $_resized = false;
 
     /**
+     * Flag for if header has been sent when using the render method.
+     */
+    protected $_headerSent = false;
+
+    /**
      * Opens the file with the appropriate image type handler.
      *
      * @param  string $fileName
@@ -191,10 +196,34 @@ class Image_Processor_Adapter_Gd2 extends Image_Processor_Adapter_Abstract
         call_user_func_array($this->_getCallback('output'), $functionParameters);
     }
 
-    public function display()
+    /**
+     * Returns the image as a string ready to be printed to the screen.
+     *
+     * @return string
+     */
+    public function render()
     {
-        header("Content-type: " . $this->getMimeType());
+        $this->sendHeader();
+
+        ob_start();
         call_user_func($this->_getCallback('output'), $this->getImageHandler());
+        $image = ob_get_contents();
+        ob_end_clean();
+        return $image;
+    }
+
+    /**
+     * Sends the header to the html header.
+     *
+     * @return Image_Processor_Adapter_Gd2
+     */
+    public function sendHeader()
+    {
+        if (false === $this->_headerSent) {
+            header("Content-type: " . $this->getMimeType());
+            $this->_headerSent = true;
+        }
+        return $this;
     }
 
     /**

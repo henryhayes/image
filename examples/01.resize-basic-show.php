@@ -24,4 +24,4 @@ $processor->resize(400, 250);
 /**
  * Send the image to output.
  */
-$processor->display();
+echo $processor;
